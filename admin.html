@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Clinic Admin — Dr. Ali Al-Zubaidi Dental Clinic</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <!-- Environment banner: always visible once logged in -->
+  <div class="env-banner" id="env-banner" hidden></div>
+
+  <!-- API unavailable -->
+  <section class="center-card" id="view-offline" hidden>
+    <i class="fa-solid fa-plug-circle-xmark big-icon" aria-hidden="true"></i>
+    <h1>Booking backend not reachable</h1>
+    <p>The admin dashboard needs the booking API (Cloudflare Worker + D1). This page is currently served without it — e.g. from a static preview.</p>
+    <p class="muted">Deploy <code>backend/</code> as described in README → “Deployment”, then open <code>/admin.html</code> on the Worker’s domain.</p>
+    <a href="index.html" class="btn">← Back to website</a>
+  </section>
+
+  <!-- Login -->
+  <section class="center-card" id="view-login" hidden>
+    <div class="brand"><span class="brand-mark"><i class="fa-solid fa-tooth"></i></span><div><strong>Clinic Admin</strong><small>Dr. Ali Al-Zubaidi Dental Clinic</small></div></div>
+    <form id="login-form" novalidate>
+      <label for="login-email">Email</label>
+      <input id="login-email" type="email" autocomplete="username" required maxlength="120">
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" autocomplete="current-password" required maxlength="200">
+      <p class="form-error" id="login-error" role="alert" hidden></p>
+      <button type="submit" class="btn btn-primary btn-block" id="login-btn">Sign in</button>
+    </form>
+    <p class="muted small">Accounts are created server-side (see README → Admin setup). No credentials exist in this page’s code.</p>
+  </section>
+
+  <!-- App -->
+  <div class="app" id="view-app" hidden>
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark"><i class="fa-solid fa-tooth"></i></span><div><strong>Clinic Admin</strong><small id="admin-email"></small></div></div>
+      <nav aria-label="Admin">
+        <button class="nav-btn active" data-view="dashboard"><i class="fa-solid fa-gauge"></i> Dashboard</button>
+        <button class="nav-btn" data-view="appointments"><i class="fa-regular fa-calendar"></i> Appointments</button>
+        <button class="nav-btn" data-view="notifications"><i class="fa-brands fa-whatsapp"></i> Notifications</button>
+        <button class="nav-btn" data-view="services"><i class="fa-solid fa-tooth"></i> Services</button>
+        <button class="nav-btn" data-view="settings"><i class="fa-solid fa-sliders"></i> Clinic settings</button>
+      </nav>
+      <div class="sidebar-foot">
+        <label for="env-view" class="small muted">Viewing data of</label>
+        <select id="env-view"><option value="">Server mode</option><option value="test">test</option><option value="production">production</option></select>
+        <button class="btn btn-block" id="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+      </div>
+    </aside>
+
+    <main class="content" id="content">
+      <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+      <!-- Dashboard -->
+      <section data-panel="dashboard">
+        <header class="panel-head"><h1>Dashboard</h1><button class="btn" data-refresh><i class="fa-solid fa-rotate"></i> Refresh</button></header>
+        <div class="wa-status" id="wa-status"></div>
+        <div class="stats" id="stats"></div>
+        <h2>Today’s appointments <span class="muted" id="today-label"></span></h2>
+        <div class="table-wrap"><table class="data"><thead><tr><th>Time</th><th>Reference</th><th>Patient</th><th>Phone</th><th>Service</th><th>Status</th></tr></thead><tbody id="today-body"></tbody></table></div>
+      </section>
+
+      <!-- Appointments -->
+      <section data-panel="appointments" hidden>
+        <header class="panel-head"><h1>Appointments</h1></header>
+        <form class="filters" id="appt-filters">
+          <input type="search" name="q" placeholder="Search name, phone, reference" maxlength="60" aria-label="Search">
+          <select name="status" aria-label="Status"><option value="">All statuses</option><option>pending</option><option>confirmed</option><option>cancelled</option><option>completed</option><option>no_show</option></select>
+          <label>From <input type="date" name="from"></label>
+          <label>To <input type="date" name="to"></label>
+          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-filter"></i> Apply</button>
+        </form>
+        <div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Time</th><th>Reference</th><th>Patient</th><th>Phone</th><th>Service</th><th>Status</th><th>WhatsApp</th><th>Actions</th></tr></thead><tbody id="appt-body"></tbody></table></div>
+      </section>
+
+      <!-- Notifications -->
+      <section data-panel="notifications" hidden>
+        <header class="panel-head"><h1>WhatsApp notifications</h1>
+          <div class="head-actions"><button class="btn" id="send-test-btn"><i class="fa-solid fa-flask"></i> Send test message</button><button class="btn" data-refresh><i class="fa-solid fa-rotate"></i></button></div>
+        </header>
+        <div class="wa-status" id="wa-status-2"></div>
+        <div class="chips" id="notif-filter">
+          <button class="chip active" data-status="">All</button><button class="chip" data-status="pending">pending</button><button class="chip" data-status="processing">processing</button><button class="chip" data-status="sent">sent</button><button class="chip" data-status="delivered">delivered</button><button class="chip" data-status="read">read</button><button class="chip" data-status="retrying">retrying</button><button class="chip" data-status="failed">failed</button>
+        </div>
+        <div class="table-wrap"><table class="data"><thead><tr><th>Created</th><th>Booking</th><th>Type</th><th>Recipient</th><th>Status</th><th>Attempts</th><th>Provider ID</th><th>Last error / next attempt</th><th></th></tr></thead><tbody id="notif-body"></tbody></table></div>
+      </section>
+
+      <!-- Services -->
+      <section data-panel="services" hidden>
+        <header class="panel-head"><h1>Services</h1><button class="btn btn-primary" id="add-service-btn"><i class="fa-solid fa-plus"></i> Add service</button></header>
+        <p class="muted">Duration empty = clinic default. Available days empty = all clinic working days. Disabling a service hides it from booking immediately.</p>
+        <div class="table-wrap"><table class="data"><thead><tr><th>#</th><th>Slug</th><th>English</th><th>Arabic</th><th>Duration</th><th>Days</th><th>Active</th><th></th></tr></thead><tbody id="svc-body"></tbody></table></div>
+        <dialog id="svc-dialog">
+          <form id="svc-form" method="dialog">
+            <h2 id="svc-dialog-title">Service</h2>
+            <input type="hidden" name="id">
+            <div class="grid2">
+              <label>Slug<input name="slug" pattern="[a-z0-9-]{2,60}" required></label>
+              <label>Sort order<input name="sort_order" type="number" value="0"></label>
+              <label>Name (English)<input name="name_en" required maxlength="100"></label>
+              <label>Name (Arabic)<input name="name_ar" required maxlength="100" dir="rtl"></label>
+              <label>Duration (minutes, multiple of 5)<input name="duration_minutes" type="number" min="5" max="480" step="5" placeholder="Clinic default"></label>
+              <label class="check"><input name="active" type="checkbox" checked> Active (bookable)</label>
+            </div>
+            <fieldset class="days"><legend>Available days (optional)</legend></fieldset>
+            <label>Description (English)<textarea name="description_en" rows="2" maxlength="1000"></textarea></label>
+            <label>Description (Arabic)<textarea name="description_ar" rows="2" maxlength="1000" dir="rtl"></textarea></label>
+            <p class="form-error" id="svc-error" hidden></p>
+            <div class="dialog-actions"><button type="button" class="btn" id="svc-cancel">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+          </form>
+        </dialog>
+      </section>
+
+      <!-- Settings -->
+      <section data-panel="settings" hidden>
+        <header class="panel-head"><h1>Clinic settings</h1></header>
+        <form id="settings-form" class="card">
+          <h2>Working hours <span class="muted small">(Asia/Baghdad). Leave a day unchecked if closed or not confirmed.</span></h2>
+          <div id="hours-editor" class="hours-editor"></div>
+          <h2>Booking rules</h2>
+          <div class="grid3">
+            <label>Default duration (min)<input name="default_duration" type="number" min="5" step="5" required></label>
+            <label>Buffer between appointments (min)<input name="buffer_minutes" type="number" min="0" step="5" required></label>
+            <label>Slot interval (min)<input name="slot_step_minutes" type="number" min="5" step="5" required></label>
+            <label>Booking window (days ahead)<input name="booking_window_days" type="number" min="1" max="180" required></label>
+            <label>Minimum notice (min)<input name="min_notice_minutes" type="number" min="0" required></label>
+            <label>Max active bookings per phone<input name="max_active_per_phone" type="number" min="1" max="20" required></label>
+          </div>
+          <h2>Contact information</h2>
+          <div class="grid3">
+            <label>Phone<input name="phone" required maxlength="20"></label>
+            <label>Address (English)<input name="address_en" required maxlength="200"></label>
+            <label>Address (Arabic)<input name="address_ar" required maxlength="200" dir="rtl"></label>
+          </div>
+          <p class="form-error" id="settings-error" hidden></p>
+          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save settings</button>
+        </form>
+
+        <div class="card">
+          <h2>Holidays & blocked times</h2>
+          <form class="filters" id="block-form">
+            <label>Date<input type="date" name="date" required></label>
+            <label>From<input type="time" name="start_time" step="300"></label>
+            <label>To<input type="time" name="end_time" step="300"></label>
+            <input name="reason" placeholder="Reason (optional)" maxlength="120" aria-label="Reason">
+            <button class="btn btn-primary" type="submit"><i class="fa-solid fa-ban"></i> Block</button>
+          </form>
+          <p class="muted small">Leave From/To empty to block the whole day (holiday). Existing bookings are not cancelled automatically.</p>
+          <div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th>Time</th><th>Reason</th><th></th></tr></thead><tbody id="block-body"></tbody></table></div>
+        </div>
+
+        <div class="card">
+          <h2>WhatsApp configuration</h2>
+          <div id="wa-config"></div>
+          <p class="muted small">Credentials and recipients are server-side secrets and can only be changed with <code>wrangler secret put</code> (see README). They are never displayed or editable here.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

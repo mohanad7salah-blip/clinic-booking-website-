@@ -1,0 +1,36 @@
+# Cloudflare Worker: booking API + static site (same origin).
+# Docs: README.md → "Deployment"
+name = "alz-dental-booking"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+workers_dev = true
+
+# Serve the static website from the repository root (index.html, css/, js/, services/, admin.html…)
+[assets]
+directory = "../"
+binding = "ASSETS"
+not_found_handling = "404-page"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "alz_booking"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"   # from: npx wrangler d1 create alz_booking
+
+# Retry notification jobs every minute (exponential backoff is enforced per job)
+[triggers]
+crons = ["* * * * *"]
+
+# ---------- NON-secret configuration ----------
+# Secrets (tokens, recipients, app secret) are set with `wrangler secret put` — NEVER here.
+[vars]
+APP_ENV = "test"                 # test | production  (must agree with WHATSAPP_MODE)
+WHATSAPP_MODE = "test"           # test | production  ← the single production switch
+WHATSAPP_API_VERSION = "v21.0"
+WHATSAPP_SIMULATE_FAILURE = "false"   # "true" = force send failures (TEST mode only) to exercise retries
+# Optional approved template names (leave empty to send free-form text within a 24h session window)
+WHATSAPP_TEMPLATE_CLINIC = ""
+WHATSAPP_TEMPLATE_PATIENT = ""
+WHATSAPP_TEMPLATE_LANG_AR = "ar"
+WHATSAPP_TEMPLATE_LANG_EN = "en"
+# Comma-separated origins allowed to call the public API cross-origin (empty = same-origin only)
+ALLOWED_ORIGINS = ""

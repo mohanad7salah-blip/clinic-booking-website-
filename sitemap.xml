@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>https://alzubaidi-dental.example/</loc><changefreq>monthly</changefreq><priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://alzubaidi-dental.example/?lang=ar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://alzubaidi-dental.example/?lang=en"/></url>
+  <url><loc>https://alzubaidi-dental.example/services/teeth-whitening.html</loc><priority>0.8</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/emax.html</loc><priority>0.8</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/cosmetic-dentistry.html</loc><priority>0.8</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/orthodontic-treatment.html</loc><priority>0.8</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/gold-braces.html</loc><priority>0.7</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/metal-braces.html</loc><priority>0.7</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/clear-braces.html</loc><priority>0.7</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/clear-aligners.html</loc><priority>0.7</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/dental-fillings.html</loc><priority>0.7</priority></url>
+  <url><loc>https://alzubaidi-dental.example/services/wisdom-tooth-extraction.html</loc><priority>0.7</priority></url>
+</urlset>
